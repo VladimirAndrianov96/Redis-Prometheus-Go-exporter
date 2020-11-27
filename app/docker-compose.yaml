@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:3.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - prometheus_docker_go_bridge
+
+  redis-exporter:
+    image: oliver006/redis_exporter:alpine
+    container_name: redis-exporter
+    restart: unless-stopped
+    command: ["--redis.addr", "redis://redis:6379"]
+    ports:
+      - "9121:9121"
+    networks:
+      - prometheus_docker_go_bridge
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+    volumes:
+      - "./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml"
+    ports:
+      - "9090:9090"
+    networks:
+      - prometheus_docker_go_bridge
+
+# Volumes to be created provide provide persistent data storage
+volumes:
+  redis_data:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  prometheus_docker_go_bridge:
+    driver: bridge
