@@ -10,9 +10,10 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
+	"strings"
 )
 
-// config declares connection details.
+// config declares connection and parser details.
 type config struct {
 	ExporterPort  string `mapstructure:"exporter_port"`
 
@@ -23,11 +24,13 @@ type config struct {
 	RedisDBNameSecond int `mapstructure:"redis_db_name_second"`
 
 	RequiredMetrics []string `mapstructure:"required_metrics"`
+	SkippedMetrics []string `mapstructure:"skipped_metrics"`
 }
 
 var cfg config
 var ctx = context.Background()
 
+// Initialize logger to replace the default one.
 func initLogger() error {
 	// Initialize the logs encoder.
 	encoder := zap.NewProductionEncoderConfig()
@@ -52,6 +55,7 @@ func initLogger() error {
 	return nil
 }
 
+// Load all configuration details from local .yaml file.
 func loadConfiguration() error {
 	viper.AddConfigPath("./exporter/cmd/config")
 	viper.SetConfigName("configuration")
@@ -85,6 +89,7 @@ func setupRedisClients() (redis.Client, redis.Client){
 	return *rdb1, *rdb2
 }
 
+// Writes data to two databases inside Redis on startup.
 func setDefaultValuesOnStartup(rdb1, rdb2 redis.Client) error{
 	err := rdb1.Set(ctx, "key1", "value1", 0).Err()
 	if err != nil {
@@ -112,6 +117,17 @@ func main() {
 	err = loadConfiguration()
 	if err != nil {
 		zap.S().Fatal(err)
+	}
+
+	// Ensure skipped sections for the metrics parsing function are
+	// not included in list of required metrics
+	// to prevent data from wrong parsing.
+	for _, requiredMetric := range cfg.RequiredMetrics{
+		for _, skippedMetric := range cfg.SkippedMetrics{
+			if strings.Compare(requiredMetric, skippedMetric) == 0{
+				zap.S().Fatal("Skipped metric is not allowed in list of required metrics for the generic parser.")
+			}
+		}
 	}
 
 	rdb1, rdb2 := setupRedisClients()
