@@ -1,11 +1,14 @@
 package collector
 
 import (
+	"context"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const namespace = "redis"
+var metrics map[string]string
 
 var (
 	// Metrics
@@ -32,23 +35,25 @@ var (
 )
 
 type metricsCollector struct {
+	ctx context.Context
+	rdb1 redis.Client
+	rdb2 redis.Client
 	clientsConnectedTotal *prometheus.Desc
 	keysPerDatabaseCount *prometheus.Desc
 	expiringKeysCount *prometheus.Desc
 	averageKeyTTLSeconds *prometheus.Desc
-	rdb1 redis.Client
-	rdb2 redis.Client
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(rdb1, rdb2 redis.Client) *metricsCollector{
+func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client) *metricsCollector{
 	return &metricsCollector{
+		ctx: ctx,
+		rdb1: rdb1,
+		rdb2: rdb2,
 		clientsConnectedTotal: clientsConnectedTotal,
 		keysPerDatabaseCount: keysPerDatabaseCount,
 		expiringKeysCount: expiringKeysCount,
 		averageKeyTTLSeconds: averageKeyTTLSeconds,
-		rdb1: rdb1,
-		rdb2: rdb2,
 	}
 }
 
@@ -72,4 +77,25 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, metricValue)
+}
+
+func (collector *metricsCollector) getMetrics(){
+	val := collector.rdb1.Info(collector.ctx)
+	fmt.Println(val)
+}
+
+func getClientsConnectedTotal(){
+
+}
+
+func getKeysPerDatabaseCount(){
+
+}
+
+func getExpiringKeysCount(){
+
+}
+
+func getAverageKeyTTLSecondsl(){
+
 }

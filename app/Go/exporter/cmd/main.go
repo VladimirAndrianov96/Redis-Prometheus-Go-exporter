@@ -125,7 +125,7 @@ func main() {
 	zap.S().Info("Default values were set to both Redis databases.")
 
 	// Create a new instance of the collector and register it with the prometheus client.
-	collector := collector.NewMetricsCollector(rdb1, rdb2)
+	collector := collector.NewMetricsCollector(ctx, rdb1, rdb2)
 	prometheus.MustRegister(collector)
 
 	http.Handle("/metrics", promhttp.Handler())
