@@ -9,4 +9,6 @@ redis_db_name_second: 2
 
 required_metrics:
   - Clients
-  - Keyspace
+  - Memory
+
+skipped_metrics: Keyspace
