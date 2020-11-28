@@ -1,5 +1,0 @@
-- targets:
-   - f3.mydomain.com:9121
-  labels:
-    env: staging
-    job: redis-exporter
