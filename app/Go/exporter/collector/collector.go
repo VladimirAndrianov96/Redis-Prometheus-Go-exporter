@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
+	"strings"
 )
 
 const namespace = "redis"
@@ -38,6 +39,7 @@ type metricsCollector struct {
 	ctx context.Context
 	rdb1 redis.Client
 	rdb2 redis.Client
+	requiredMetrics []string
 	clientsConnectedTotal *prometheus.Desc
 	keysPerDatabaseCount *prometheus.Desc
 	expiringKeysCount *prometheus.Desc
@@ -45,11 +47,12 @@ type metricsCollector struct {
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client) *metricsCollector{
+func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client, requiredMetrics []string) *metricsCollector{
 	return &metricsCollector{
 		ctx: ctx,
 		rdb1: rdb1,
 		rdb2: rdb2,
+		requiredMetrics: requiredMetrics,
 		clientsConnectedTotal: clientsConnectedTotal,
 		keysPerDatabaseCount: keysPerDatabaseCount,
 		expiringKeysCount: expiringKeysCount,
