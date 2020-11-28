@@ -68,7 +68,7 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	// Write latest value for each metric in the Prometheus metric channel.
-	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.CounterValue, metricValue)
+	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, metricValue)
