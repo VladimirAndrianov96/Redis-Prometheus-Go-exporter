@@ -12,16 +12,6 @@ services:
     networks:
       - prometheus_docker_go_bridge
 
-  redis-exporter:
-    image: oliver006/redis_exporter:alpine
-    container_name: redis-exporter
-    restart: unless-stopped
-    command: ["--redis.addr", "redis://redis:6379"]
-    ports:
-      - "9121:9121"
-    networks:
-      - prometheus_docker_go_bridge
-
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
