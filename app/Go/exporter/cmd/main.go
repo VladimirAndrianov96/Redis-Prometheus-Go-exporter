@@ -18,6 +18,9 @@ type config struct {
 
 	RedisAddress     string `mapstructure:"redis_address"`
 	RedisPassword 	 string `mapstructure:"redis_password"`
+
+	RedisDBNameFirst int `mapstructure:"redis_db_name_first"`
+	RedisDBNameSecond int `mapstructure:"redis_db_name_second"`
 }
 
 var cfg config
@@ -68,13 +71,13 @@ func setupRedisClients() (redis.Client, redis.Client){
 	rdb1 := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddress,
 		Password: cfg.RedisPassword,
-		DB:       0,
+		DB:       cfg.RedisDBNameFirst,
 	})
 
 	rdb2 := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddress,
 		Password: cfg.RedisPassword,
-		DB:       1,
+		DB:       cfg.RedisDBNameSecond,
 	})
 
 	return *rdb1, *rdb2
