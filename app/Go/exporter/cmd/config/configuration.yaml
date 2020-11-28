@@ -6,3 +6,7 @@ redis_password:
 
 redis_db_name_first: 1
 redis_db_name_second: 2
+
+required_metrics:
+  - Clients
+  - Keyspace

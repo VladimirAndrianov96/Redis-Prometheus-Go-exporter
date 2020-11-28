@@ -21,6 +21,8 @@ type config struct {
 
 	RedisDBNameFirst int `mapstructure:"redis_db_name_first"`
 	RedisDBNameSecond int `mapstructure:"redis_db_name_second"`
+
+	RequiredMetrics []string `mapstructure:"required_metrics"`
 }
 
 var cfg config
