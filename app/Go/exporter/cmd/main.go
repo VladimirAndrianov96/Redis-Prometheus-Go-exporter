@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 // config declares connection details.
 type config struct {
-	ExporterPort  int `mapstructure:"exporter_port"`
+	ExporterPort  string `mapstructure:"exporter_port"`
 
 	RedisAddress     string `mapstructure:"redis_address"`
 	RedisPassword 	 string `mapstructure:"redis_password"`
@@ -35,7 +37,6 @@ func initLogger() error {
 }
 
 func loadConfiguration() error {
-	// Load up configuration.
 	viper.AddConfigPath("./exporter/cmd/config")
 	viper.SetConfigName("configuration")
 
@@ -95,4 +96,7 @@ func main() {
 	}
 
 	zap.S().Info("Default values were set to both Redis databases.")
+	zap.S().Infof("Starting the server on port %s ...", cfg.ExporterPort)
+	http.Handle("/metrics", promhttp.Handler())
+	zap.S().Fatal(http.ListenAndServe(cfg.ExporterPort, nil))
 }
