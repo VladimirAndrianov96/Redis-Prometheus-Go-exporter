@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"net/http"
 )
 
@@ -21,11 +22,19 @@ var cfg config
 var ctx = context.Background()
 
 func initLogger() error {
-	// Global logging synchronizer.
-	// This ensures the logged data is flushed out of the buffer before program exits.
-	defer zap.S().Sync()
+	// Initialize the logs encoder.
+	encoder := zap.NewProductionEncoderConfig()
+	encoder.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoder.EncodeDuration = zapcore.StringDurationEncoder
 
-	logger, err := zap.NewProduction()
+	// Initialize the logger.
+	logger, err := zap.Config{
+		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+		Encoding:         "console",
+		EncoderConfig:    encoder,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}.Build()
 	if err != nil {
 		return err
 	}
@@ -80,6 +89,10 @@ func setDefaultValuesOnStartup() error{
 }
 
 func main() {
+	// Global logging synchronizer.
+	// This ensures the logged data is flushed out of the buffer before program exits.
+	defer zap.S().Sync()
+
 	err := initLogger()
 	if err != nil {
 		zap.S().Fatal(err)
