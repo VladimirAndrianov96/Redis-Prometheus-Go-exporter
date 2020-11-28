@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"exporter/exporter/collector"
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -62,7 +64,7 @@ func loadConfiguration() error {
 	return nil
 }
 
-func setDefaultValuesOnStartup() error{
+func setupRedisClients() (redis.Client, redis.Client){
 	rdb1 := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddress,
 		Password: cfg.RedisPassword,
@@ -75,6 +77,10 @@ func setDefaultValuesOnStartup() error{
 		DB:       1,
 	})
 
+	return *rdb1, *rdb2
+}
+
+func setDefaultValuesOnStartup(rdb1, rdb2 redis.Client) error{
 	err := rdb1.Set(ctx, "key1", "value1", 0).Err()
 	if err != nil {
 		return err
@@ -103,13 +109,23 @@ func main() {
 		zap.S().Fatal(err)
 	}
 
-	err = setDefaultValuesOnStartup()
+	rdb1, rdb2 := setupRedisClients()
+	if err != nil {
+		zap.S().Fatal(err)
+	}
+
+	err = setDefaultValuesOnStartup(rdb1, rdb2)
 	if err != nil {
 		zap.S().Fatal(err)
 	}
 
 	zap.S().Info("Default values were set to both Redis databases.")
-	zap.S().Infof("Starting the server on port %s ...", cfg.ExporterPort)
+
+	// Create a new instance of the collector and register it with the prometheus client.
+	collector := collector.NewMetricsCollector(rdb1, rdb2)
+	prometheus.MustRegister(collector)
+
 	http.Handle("/metrics", promhttp.Handler())
+	zap.S().Infof("Starting the server on port %s ...", cfg.ExporterPort)
 	zap.S().Fatal(http.ListenAndServe(cfg.ExporterPort, nil))
 }
