@@ -71,7 +71,12 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements required collect function for all Prometheus collectors
 func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	// Any of clients from same Redis connection works well to provide collector with general INFO data.
-	metrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, collector.clients[0])
+	generalMetrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, collector.clients[0])
+	if err != nil{
+		zap.S().Panic(err)
+	}
+
+	keyspaceMetrics, err := parser.GetKeyspaceMetrics(collector.ctx, collector.clients[0])
 	if err != nil{
 		zap.S().Panic(err)
 	}
@@ -82,7 +87,7 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	stringMetricsValues := []string{}
 
 	// Iterate over all metrics.
-	for k, v := range *metrics {
+	for k, v := range *generalMetrics {
 		val, err := strconv.ParseFloat(v, 64)
 		if err != nil{
 			stringMetricsKeys = append(stringMetricsKeys, k)
@@ -110,14 +115,14 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(stringMetric, prometheus.GaugeValue, 1, stringMetricsValues...)
 
 	// Return required common custom metric.
-	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal(*metrics))
+	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal(*generalMetrics))
 
 	// Return required metrics for all configured databases.
-	for i, v := range collector.databases{
-		db := strconv.Itoa(v)
-		ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, getKeysPerDatabaseCount(v, collector.clients[i]), string(db))
-		ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, getExpiringKeysCount(v, collector.clients[i]), string(db))
-		ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, getAverageKeyTTLSecondsl(v, collector.clients[i]), string(db))
+	for i, v := range *keyspaceMetrics{
+		db := strconv.Itoa(collector.databases[i])
+		ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, getKeysPerDatabaseCount(v), db)
+		ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, getExpiringKeysCount(v), db)
+		ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, getAverageKeyTTLSeconds(v), db)
 	}
 }
 
@@ -125,20 +130,38 @@ func getClientsConnectedTotal(metrics map[string]string) float64{
 	metric := "connected_clients"
 	val, err := strconv.ParseFloat(metrics[metric], 64)
 	if err != nil{
-		zap.S().Panic("Failed to read %s metric", metric)
+		zap.S().Panic("Failed to read metric:", metric, err)
 	}
 
 	return val
 }
 
-func getKeysPerDatabaseCount(db int, client redis.Client) float64{
-	return 1
+func getKeysPerDatabaseCount(metrics map[string]string) float64{
+	metric := "keys"
+	val, err := strconv.ParseFloat(metrics[metric], 64)
+	if err != nil{
+		zap.S().Panic("Failed to read metric:", metric, err)
+	}
+
+	return val
 }
 
-func getExpiringKeysCount(db int, client redis.Client) float64{
-	return 1
+func getExpiringKeysCount(metrics map[string]string) float64{
+	metric := "expires"
+	val, err := strconv.ParseFloat(metrics[metric], 64)
+	if err != nil{
+		zap.S().Panic("Failed to read metric:", metric, err)
+	}
+
+	return val
 }
 
-func getAverageKeyTTLSecondsl(db int, client redis.Client) float64{
-	return 1
+func getAverageKeyTTLSeconds(metrics map[string]string) float64{
+	metric := "avg_ttl"
+	val, err := strconv.ParseFloat(metrics[metric], 64)
+	if err != nil{
+		zap.S().Panic("Failed to read metric:", metric, err)
+	}
+
+	return val
 }

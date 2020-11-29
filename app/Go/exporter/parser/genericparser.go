@@ -35,6 +35,7 @@ func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client redis.
 
 		// Add key-value entry to the metrics map.
 		for _, dataRow := range slicedData{
+			// Split string by ":" delimiter to separate the string into key and value.
 			parts := strings.Split(dataRow, ":")
 			metrics[parts[0]]=parts[1]
 		}
