@@ -37,7 +37,7 @@ var (
 
 type metricsCollector struct {
 	ctx context.Context
-	clients []redis.Client
+	clients []*redis.Client
 	requiredMetrics []string
 	databases []int
 	clientsConnectedTotal *prometheus.Desc
@@ -47,7 +47,7 @@ type metricsCollector struct {
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(ctx context.Context, clients []redis.Client, requiredMetrics []string, databases []int) *metricsCollector{
+func NewMetricsCollector(ctx context.Context, clients []*redis.Client, requiredMetrics []string, databases []int) *metricsCollector{
 	return &metricsCollector{
 		ctx: ctx,
 		clients: clients,
@@ -70,13 +70,13 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements required collect function for all Prometheus collectors
 func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
-	// Any of clients from same Redis connection works well to provide collector with general INFO data.
-	generalMetrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, collector.clients[0])
+	// Any of clients from same Redis connection works well to provide collector with general and keyspace data from INFO.
+	generalMetrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, *collector.clients[0])
 	if err != nil{
 		zap.S().Panic(err)
 	}
 
-	keyspaceMetrics, err := parser.GetKeyspaceMetrics(collector.ctx, collector.clients[0])
+	keyspaceMetrics, err := parser.GetKeyspaceMetrics(collector.ctx, *collector.clients[0])
 	if err != nil{
 		zap.S().Panic(err)
 	}

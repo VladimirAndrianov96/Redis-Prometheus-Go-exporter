@@ -70,30 +70,30 @@ func loadConfiguration() error {
 	return nil
 }
 
-func setupRedisClients() (redis.Client, redis.Client){
-	rdb1 := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisAddress,
-		Password: cfg.RedisPassword,
-		DB:       cfg.RedisDatabases[0],
-	})
+func setupRedisClients() ([]*redis.Client){
+	clients := []*redis.Client{}
 
-	rdb2 := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisAddress,
-		Password: cfg.RedisPassword,
-		DB:       cfg.RedisDatabases[1],
-	})
+	for i, _ := range cfg.RedisDatabases{
+		client := redis.NewClient(&redis.Options{
+			Addr:     cfg.RedisAddress,
+			Password: cfg.RedisPassword,
+			DB:       cfg.RedisDatabases[i],
+		})
 
-	return *rdb1, *rdb2
+		clients = append(clients, client)
+	}
+
+	return clients
 }
 
 // Writes data to two databases inside Redis on startup.
-func setDefaultValuesOnStartup(rdb1, rdb2 redis.Client) error{
-	err := rdb1.Set(ctx, "key1", "value1", 0).Err()
+func setDefaultValuesOnStartup(clients []*redis.Client) error{
+	err := clients[0].Set(ctx, "key1", "value1", 0).Err()
 	if err != nil {
 		return err
 	}
 
-	err = rdb2.Set(ctx, "key2", "value2", 0).Err()
+	err = clients[1].Set(ctx, "key2", "value2", 0).Err()
 	if err != nil {
 		return err
 	}
@@ -116,20 +116,16 @@ func main() {
 		zap.S().Fatal(err)
 	}
 
-	rdb1, rdb2 := setupRedisClients()
-	if err != nil {
-		zap.S().Fatal(err)
-	}
+	clients := setupRedisClients()
 
-	err = setDefaultValuesOnStartup(rdb1, rdb2)
+	err = setDefaultValuesOnStartup(clients)
 	if err != nil {
 		zap.S().Fatal(err)
 	}
 
 	zap.S().Info("Default values were set to both Redis databases.")
-
 	// Create a new instance of the collector and register it with the prometheus client.
-	collector := collector.NewMetricsCollector(ctx, []redis.Client{rdb1, rdb2}, cfg.RequiredMetrics, cfg.RedisDatabases)
+	collector := collector.NewMetricsCollector(ctx, clients, cfg.RequiredMetrics, cfg.RedisDatabases)
 	prometheus.MustRegister(collector)
 
 	http.Handle("/metrics", promhttp.Handler())
