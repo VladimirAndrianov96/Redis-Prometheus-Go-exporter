@@ -147,6 +147,6 @@ func main() {
 	prometheus.MustRegister(collector)
 
 	http.Handle("/metrics", promhttp.Handler())
-	zap.S().Infof("Starting the server on port %s ...", cfg.ExporterPort)
+	zap.S().Infof("Starting the server on port %s", cfg.ExporterPort)
 	zap.S().Fatal(http.ListenAndServe(cfg.ExporterPort, nil))
 }
