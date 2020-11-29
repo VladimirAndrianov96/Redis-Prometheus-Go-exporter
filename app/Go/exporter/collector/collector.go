@@ -39,6 +39,7 @@ type metricsCollector struct {
 	rdb1 redis.Client
 	rdb2 redis.Client
 	requiredMetrics []string
+	databases []int
 	clientsConnectedTotal *prometheus.Desc
 	keysPerDatabaseCount *prometheus.Desc
 	expiringKeysCount *prometheus.Desc
@@ -46,11 +47,12 @@ type metricsCollector struct {
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client, requiredMetrics []string) *metricsCollector{
+func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client, requiredMetrics []string, databases []int) *metricsCollector{
 	return &metricsCollector{
 		ctx: ctx,
 		rdb1: rdb1,
 		rdb2: rdb2,
+		databases: databases,
 		requiredMetrics: requiredMetrics,
 		clientsConnectedTotal: clientsConnectedTotal,
 		keysPerDatabaseCount: keysPerDatabaseCount,
