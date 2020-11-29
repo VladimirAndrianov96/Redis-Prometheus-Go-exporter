@@ -1,27 +1,27 @@
-package collector
+package parser
 
 import (
-	"go.uber.org/zap"
+	"context"
+	"github.com/go-redis/redis/v8"
 	"strings"
 )
 
 var skippedMetricSection = "Keyspace"
-var metrics map[string]string
 
-func (collector *metricsCollector) getInfoMetrics(){
-	metrics = make(map[string]string)
+func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client redis.Client) (*map[string]string, error){
+	metrics := make(map[string]string)
 
 	// Iterate over passed sections.
-	for _, section := range collector.requiredMetrics{
+	for _, section := range requiredMetrics{
 		// Skip "Keyspace" metric as it's format differs from other INFO sections.
 		if strings.Compare(skippedMetricSection, section) == 0{
 			continue
 		}
 
 		// Get Redis INFO data by querying it via client.
-		data, err := collector.clients[0].Info(collector.ctx, section).Result()
+		data, err := client.Info(ctx, section).Result()
 		if err != nil {
-			zap.S().Panic(err)
+			return nil, err
 		}
 
 		// Separate plain string of values into slice of strings.
@@ -39,4 +39,6 @@ func (collector *metricsCollector) getInfoMetrics(){
 			metrics[parts[0]]=parts[1]
 		}
 	}
+
+	return &metrics, nil
 }
