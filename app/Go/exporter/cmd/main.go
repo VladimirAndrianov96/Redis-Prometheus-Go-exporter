@@ -86,16 +86,37 @@ func setupRedisClients() ([]*redis.Client){
 	return clients
 }
 
+// ***COMMENTED OUT FOR DEMO PURPOSES***
 // Writes data to two databases inside Redis on startup.
+//func setDefaultValuesOnStartup(clients []*redis.Client) error{
+//	err := clients[0].Set(ctx, "key1", "value1", 0).Err()
+//	if err != nil {
+//		return err
+//	}
+//
+//	err = clients[1].Set(ctx, "key2", "value2", 0).Err()
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
+
+// Writes data to all configured Redis databases on startup to make Redis create them.
+// If there are 5 databases configured, then create 5 and get all metrics.
 func setDefaultValuesOnStartup(clients []*redis.Client) error{
-	err := clients[0].Set(ctx, "key1", "value1", 0).Err()
+	// Add more data to two first database to make difference in metrics noticeable.
+	err := clients[0].Set(ctx, "test", "test", 0).Err()
 	if err != nil {
 		return err
 	}
 
-	err = clients[1].Set(ctx, "key2", "value2", 0).Err()
-	if err != nil {
-		return err
+	for i, v := range clients{
+		index := string(i)
+		err := v.Set(ctx, "key"+index, "value"+index, 0).Err()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

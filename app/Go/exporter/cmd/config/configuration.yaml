@@ -9,6 +9,7 @@ redis_databases:
   - 2
   - 3
   - 4
+  - 5
 
 required_metrics:
   - Keyspace
