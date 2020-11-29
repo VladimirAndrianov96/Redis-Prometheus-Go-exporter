@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+var skippedMetricSection = "Keyspace"
 var metrics map[string]string
 
 func (collector *metricsCollector) getInfoMetrics(){
@@ -12,6 +13,12 @@ func (collector *metricsCollector) getInfoMetrics(){
 
 	// Iterate over passed sections.
 	for _, section := range collector.requiredMetrics{
+		// Skip "Keyspace" metric as it's format differs from other INFO sections.
+		if strings.Compare(skippedMetricSection, section) == 0{
+			continue
+		}
+
+		// Get Redis INFO data by querying it via client.
 		data, err := collector.rdb1.Info(collector.ctx, section).Result()
 		if err != nil {
 			zap.S().Panic(err)

@@ -71,6 +71,8 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.getInfoMetrics()
 
+	// Non-numerical values cannot be set as values for Prometheus metrics.
+	// Store this exceptional data and return it later as labels for metric.
 	stringMetricsKeys := []string{}
 	stringMetricsValues := []string{}
 

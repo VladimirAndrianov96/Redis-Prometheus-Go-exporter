@@ -8,7 +8,6 @@ redis_db_name_first: 1
 redis_db_name_second: 2
 
 required_metrics:
+  - Keyspace
   - Clients
   - Memory
-
-skipped_metrics: Keyspace

@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
-	"strings"
 )
 
 // config declares connection and parser details.
@@ -24,7 +23,6 @@ type config struct {
 	RedisDBNameSecond int `mapstructure:"redis_db_name_second"`
 
 	RequiredMetrics []string `mapstructure:"required_metrics"`
-	SkippedMetrics []string `mapstructure:"skipped_metrics"`
 }
 
 var cfg config
@@ -117,17 +115,6 @@ func main() {
 	err = loadConfiguration()
 	if err != nil {
 		zap.S().Fatal(err)
-	}
-
-	// Ensure skipped sections for the metrics parsing function are
-	// not included in list of required metrics
-	// to prevent data from wrong parsing.
-	for _, requiredMetric := range cfg.RequiredMetrics{
-		for _, skippedMetric := range cfg.SkippedMetrics{
-			if strings.Compare(requiredMetric, skippedMetric) == 0{
-				zap.S().Fatal("Skipped metric is not allowed in list of required metrics for the generic parser.")
-			}
-		}
 	}
 
 	rdb1, rdb2 := setupRedisClients()
