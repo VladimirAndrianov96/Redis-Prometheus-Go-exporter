@@ -2,14 +2,13 @@ package collector
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
-	"strings"
+	"go.uber.org/zap"
+	"strconv"
 )
 
 const namespace = "redis"
-var metrics map[string]string
 
 var (
 	// Metrics
@@ -72,33 +71,33 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	var metricValue float64
 	if 1 == 1 {
-		metricValue = 1
+		metricValue = 0
 	}
 
+	collector.getInfoMetrics()
+
 	// Write latest value for each metric in the Prometheus metric channel.
-	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, metricValue)
+	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal())
 	ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, metricValue)
 	ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, metricValue)
 }
 
-func (collector *metricsCollector) getMetrics(){
-	val := collector.rdb1.Info(collector.ctx)
-	fmt.Println(val)
-}
+func getClientsConnectedTotal() float64{
+	metric := "connected_clients"
+	val, err := strconv.ParseFloat(metrics[metric], 64)
+	if err != nil{
+		zap.S().Panic("Failed to read %s metric", metric)
+	}
 
-func getClientsConnectedTotal(){
-
+	return val
 }
 
 func getKeysPerDatabaseCount(){
-
 }
 
 func getExpiringKeysCount(){
-
 }
 
 func getAverageKeyTTLSecondsl(){
-
 }
