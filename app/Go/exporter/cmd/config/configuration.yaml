@@ -4,8 +4,9 @@ exporter_port: :9999
 redis_address: redis:6379
 redis_password:
 
-redis_db_name_first: 1
-redis_db_name_second: 2
+redis_databases:
+  - 1
+  - 2
 
 required_metrics:
   - Keyspace
