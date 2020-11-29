@@ -69,18 +69,18 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements required collect function for all Prometheus collectors
 func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
-	var metricValue float64
-	if 1 == 1 {
-		metricValue = 0
-	}
+	collector.getInfoMetrics()
+
+	for k, v := range metrics{
+		}
 
 	collector.getInfoMetrics()
 
 	// Write latest value for each metric in the Prometheus metric channel.
 	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal())
-	ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, metricValue)
-	ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, metricValue)
-	ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, metricValue)
+	//ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, 1)
+	//ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, 1)
+	//ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, 1)
 }
 
 func getClientsConnectedTotal() float64{
