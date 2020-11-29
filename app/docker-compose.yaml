@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  exporter:
+    container_name: exporter
+    restart: unless-stopped  
+    build:
+      context: ./Go
+      dockerfile: exporter/Dockerfile
+    ports: 
+      - "9999:9999"
+    networks:
+      - prometheus_docker_go_bridge
+
   redis:
     image: redis:3.2-alpine
     container_name: redis
