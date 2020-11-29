@@ -20,24 +20,23 @@ var (
 	keysPerDatabaseCount = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "keys_per_database_count"),
 		"Number of keys per Redis database.",
-		nil, nil,
+		[]string{"database"}, nil,
 	)
 	expiringKeysCount = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "expiring_keys_count"),
 		"Number of keys per Redis database.",
-		nil, nil,
+		[]string{"database"}, nil,
 	)
 	averageKeyTTLSeconds = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "average_key_ttl_seconds"),
 		"Average key TTL in seconds.",
-		nil, nil,
+		[]string{"database"}, nil,
 	)
 )
 
 type metricsCollector struct {
 	ctx context.Context
-	rdb1 redis.Client
-	rdb2 redis.Client
+	clients []redis.Client
 	requiredMetrics []string
 	databases []int
 	clientsConnectedTotal *prometheus.Desc
@@ -47,11 +46,10 @@ type metricsCollector struct {
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(ctx context.Context, rdb1, rdb2 redis.Client, requiredMetrics []string, databases []int) *metricsCollector{
+func NewMetricsCollector(ctx context.Context, clients []redis.Client, requiredMetrics []string, databases []int) *metricsCollector{
 	return &metricsCollector{
 		ctx: ctx,
-		rdb1: rdb1,
-		rdb2: rdb2,
+		clients: clients,
 		databases: databases,
 		requiredMetrics: requiredMetrics,
 		clientsConnectedTotal: clientsConnectedTotal,
@@ -78,6 +76,7 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	stringMetricsKeys := []string{}
 	stringMetricsValues := []string{}
 
+	// Iterate over all metrics.
 	for k, v := range metrics{
 		val, err := strconv.ParseFloat(v, 64)
 		if err != nil{
@@ -86,27 +85,35 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 			continue
 		}
 
-		metric := prometheus.NewDesc(
+		numericalMetric := prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "info", k),
 			"Data gathered from Redis INFO.",
 			nil, nil,
 		)
 
-		ch <- prometheus.MustNewConstMetric(metric, prometheus.GaugeValue, val)
+		// Return all numerical metrics.
+		ch <- prometheus.MustNewConstMetric(numericalMetric, prometheus.GaugeValue, val)
 	}
-		metric := prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "info", "non_numerical"),
-			"Non-numerical data gathered from Redis INFO.",
-			stringMetricsKeys, nil,
-		)
 
-		ch <- prometheus.MustNewConstMetric(metric, prometheus.GaugeValue, 1, stringMetricsValues...)
+	// Return all non-numeric metrics as labels.
+	stringMetric := prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "info", "non_numerical"),
+		"Non-numerical data gathered from Redis INFO.",
+		stringMetricsKeys, nil,
+	)
 
-	// Write latest value for each metric in the Prometheus metric channel.
+	ch <- prometheus.MustNewConstMetric(stringMetric, prometheus.GaugeValue, 1, stringMetricsValues...)
+
+	// Return required common custom metric.
 	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal())
-	//ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, 1)
-	//ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, 1)
-	//ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, 1)
+
+	// Return required metrics for all configured databases.
+	for _, v := range collector.databases{
+		db := strconv.Itoa(v)
+		ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, getKeysPerDatabaseCount(v), string(db))
+		ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, getExpiringKeysCount(v), string(db))
+		ch <- prometheus.MustNewConstMetric(collector.averageKeyTTLSeconds, prometheus.GaugeValue, getAverageKeyTTLSecondsl(v), string(db))
+	}
 }
 
 func getClientsConnectedTotal() float64{
@@ -119,11 +126,14 @@ func getClientsConnectedTotal() float64{
 	return val
 }
 
-func getKeysPerDatabaseCount(){
+func getKeysPerDatabaseCount(db int) float64{
+	return 1
 }
 
-func getExpiringKeysCount(){
+func getExpiringKeysCount(db int) float64{
+	return 1
 }
 
-func getAverageKeyTTLSecondsl(){
+func getAverageKeyTTLSecondsl(db int) float64{
+	return 1
 }

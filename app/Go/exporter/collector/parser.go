@@ -19,7 +19,7 @@ func (collector *metricsCollector) getInfoMetrics(){
 		}
 
 		// Get Redis INFO data by querying it via client.
-		data, err := collector.rdb1.Info(collector.ctx, section).Result()
+		data, err := collector.clients[0].Info(collector.ctx, section).Result()
 		if err != nil {
 			zap.S().Panic(err)
 		}
