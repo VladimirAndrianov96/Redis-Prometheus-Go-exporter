@@ -72,9 +72,19 @@ func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.getInfoMetrics()
 
 	for k, v := range metrics{
+		val, err := strconv.ParseFloat(v, 64)
+		if err != nil{
+			zap.S().Infof("Non-numeric metric: %s", k)
 		}
 
-	collector.getInfoMetrics()
+		metric := prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "info", k),
+			"Data gathered from Redis INFO.",
+			nil, nil,
+		)
+
+		ch <- prometheus.MustNewConstMetric(metric, prometheus.GaugeValue, val)
+	}
 
 	// Write latest value for each metric in the Prometheus metric channel.
 	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal())
