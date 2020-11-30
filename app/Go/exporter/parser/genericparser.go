@@ -2,13 +2,13 @@ package parser
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
+	"exporter/exporter/client"
 	"strings"
 )
 
 var skippedMetricSection = "Keyspace"
 
-func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client redis.Client) (*map[string]string, error){
+func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client client.RedisClient) (*map[string]string, error){
 	metrics := make(map[string]string)
 
 	// Iterate over passed sections.

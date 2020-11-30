@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"exporter/exporter/client"
 	"exporter/exporter/collector"
 	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
@@ -70,8 +71,8 @@ func loadConfiguration() error {
 	return nil
 }
 
-func setupRedisClients() ([]*redis.Client){
-	clients := []*redis.Client{}
+func setupRedisClients() (client.SliceOfClients){
+	clients := client.SliceOfClients{}
 
 	for i, _ := range cfg.RedisDatabases{
 		client := redis.NewClient(&redis.Options{
@@ -80,7 +81,7 @@ func setupRedisClients() ([]*redis.Client){
 			DB:       cfg.RedisDatabases[i],
 		})
 
-		clients = append(clients, client)
+		clients.RedisClients = append(clients.RedisClients, *client)
 	}
 
 	return clients
@@ -104,14 +105,14 @@ func setupRedisClients() ([]*redis.Client){
 
 // Writes data to all configured Redis databases on startup to make Redis create them.
 // If there are 5 databases configured, then create 5 and get all metrics.
-func setDefaultValuesOnStartup(clients []*redis.Client) error{
+func setDefaultValuesOnStartup(clients client.SliceOfClients) error{
 	// Add more data to two first database to make difference in metrics noticeable.
-	err := clients[0].Set(ctx, "test", "test", 0).Err()
+	err := clients.RedisClients[0].Set(ctx, "test", "test", 0).Err()
 	if err != nil {
 		return err
 	}
 
-	for i, v := range clients{
+	for i, v := range clients.RedisClients{
 		index := string(i)
 		err := v.Set(ctx, "key"+index, "value"+index, 0).Err()
 		if err != nil {

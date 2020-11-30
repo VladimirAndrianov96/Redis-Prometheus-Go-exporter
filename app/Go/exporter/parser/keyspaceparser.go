@@ -2,13 +2,13 @@ package parser
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
+	"exporter/exporter/client"
 	"strings"
 )
 
 var KeyspaceMetricSection = "Keyspace"
 
-func GetKeyspaceMetrics(ctx context.Context, client redis.Client) (*[]map[string]string, error){
+func GetKeyspaceMetrics(ctx context.Context, client client.RedisClient) (*[]map[string]string, error){
 	// Return array of maps with values per db.
 	metricsForAllDB := []map[string]string{}
 
