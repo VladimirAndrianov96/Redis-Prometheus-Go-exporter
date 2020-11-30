@@ -19,14 +19,11 @@ func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client client
 		}
 
 		// Get Redis INFO data by querying it via client.
-		data, err := client.Info(ctx, section).Result()
-		if err != nil {
-			return nil, err
-		}
+		data := client.Info(ctx, section)
 
 		// Separate plain string of values into slice of strings.
 		// Fix for Windows line endings included (if ran locally in Windows).
-		slicedData := strings.Split(strings.Replace(data, "\r\n", "\n", -1), "\n")
+		slicedData := strings.Split(strings.Replace(data.String(), "\r\n", "\n", -1), "\n")
 
 		// Remove "# Clients" info section header from output, it is always first line and
 		// remove the trailing new line by dropping last element instead of iterating the whole slice.

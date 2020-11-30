@@ -13,14 +13,11 @@ func GetKeyspaceMetrics(ctx context.Context, client client.RedisClient) (*[]map[
 	metricsForAllDB := []map[string]string{}
 
 	// Get Redis INFO keyspace section data by querying it via client.
-	data, err := client.Info(ctx, "Keyspace").Result()
-	if err != nil {
-		return nil, err
-	}
+	data:= client.Info(ctx, "Keyspace")
 
 	// Separate plain string of values into slice of strings.
 	// Fix for Windows line endings included (if ran locally in Windows).
-	slicedData := strings.Split(strings.Replace(data, "\r\n", "\n", -1), "\n")
+	slicedData := strings.Split(strings.Replace(data.String(), "\r\n", "\n", -1), "\n")
 
 	// Remove the "db1:" part from the "db1:keys:=1..." response to ease the parsing logic.
 	for k, v := range slicedData{
