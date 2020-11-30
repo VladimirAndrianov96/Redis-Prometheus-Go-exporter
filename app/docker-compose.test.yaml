@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  exporter_test:
+    container_name: exporter_test
+    build:
+      context: ./Go
+      dockerfile: exporter/Dockerfile.test
+    ports:
+      - "9999:9999"
+    networks:
+      - prometheus_docker_go_bridge_test
+
+# Volumes to be created provide provide persistent data storage
+volumes:
+  redis_data_test:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  prometheus_docker_go_bridge_test:
+    driver: bridge
