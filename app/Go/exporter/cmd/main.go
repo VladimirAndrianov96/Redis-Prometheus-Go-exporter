@@ -146,11 +146,16 @@ func main() {
 	}
 
 	zap.S().Info("Default values were set to both Redis databases.")
+
 	// Create a new instance of the collector and register it with the prometheus client.
 	collector := collector.NewMetricsCollector(ctx, clients, cfg.RequiredMetrics, cfg.RedisDatabases)
-	prometheus.MustRegister(collector)
 
-	http.Handle("/metrics", promhttp.Handler())
+	// Get rid of any additional metrics, it should expose only required metrics with a custom registry
+	r := prometheus.NewRegistry()
+	r.MustRegister(collector)
+	handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
+	http.Handle("/metrics", handler)
+
 	zap.S().Infof("Starting the server on port %s", cfg.ExporterPort)
 	zap.S().Fatal(http.ListenAndServe(cfg.ExporterPort, nil))
 }
