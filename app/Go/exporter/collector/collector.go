@@ -35,7 +35,7 @@ var (
 	)
 )
 
-type metricsCollector struct {
+type MetricsCollector struct {
 	ctx context.Context
 	clients client.SliceOfClients
 	requiredMetrics []string
@@ -47,8 +47,8 @@ type metricsCollector struct {
 }
 
 // NewMetricsCollector allocates a new collector instance.
-func NewMetricsCollector(ctx context.Context, clients client.SliceOfClients, requiredMetrics []string, databases []int) *metricsCollector{
-	return &metricsCollector{
+func NewMetricsCollector(ctx context.Context, clients client.SliceOfClients, requiredMetrics []string, databases []int) *MetricsCollector {
+	return &MetricsCollector{
 		ctx: ctx,
 		clients: clients,
 		databases: databases,
@@ -61,7 +61,7 @@ func NewMetricsCollector(ctx context.Context, clients client.SliceOfClients, req
 }
 
 // Describe writes all descriptors to the Prometheus desc channel.
-func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
+func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.clientsConnectedTotal
 	ch <- collector.keysPerDatabaseCount
 	ch <- collector.expiringKeysCount
@@ -69,7 +69,7 @@ func (collector *metricsCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Collect implements required collect function for all Prometheus collectors
-func (collector *metricsCollector) Collect(ch chan<- prometheus.Metric) {
+func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	// Any of clients from same Redis connection works well to provide collector with general and keyspace data from INFO.
 	generalMetrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, collector.clients.RedisClients[0])
 	if err != nil{
