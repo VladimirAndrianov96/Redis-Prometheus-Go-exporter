@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-var KeyspaceMetricSection = "Keyspace"
-
 func GetKeyspaceMetrics(ctx context.Context, client client.RedisClient) (*[]map[string]string, error){
 	// Return array of maps with values per db.
 	metricsForAllDB := []map[string]string{}
