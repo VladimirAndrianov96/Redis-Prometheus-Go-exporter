@@ -6,8 +6,14 @@ global:
 
 scrape_configs:
   - job_name: 'demo'
-
+    scheme: https
     scrape_interval: 5s
+
+    tls_config:
+      ca_file: /etc/prometheus/secrets/crt.crt
+      cert_file: /etc/prometheus/secrets/crt.crt
+      key_file: /etc/prometheus/secrets/key.key
+      server_name: vladimir-andrianov
 
     static_configs:
       - targets: ['exporter:9999']

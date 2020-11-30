@@ -31,6 +31,8 @@ services:
       - --config.file=/etc/prometheus/prometheus.yaml
     volumes:
       - "./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml"
+      - "./prometheus/crt.crt:/etc/prometheus/secrets/crt.crt"
+      - "./prometheus/key.key:/etc/prometheus/secrets/key.key"
     ports:
       - "9090:9090"
     networks:

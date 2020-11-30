@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"exporter/exporter/client"
 	"exporter/exporter/collector"
 	"github.com/go-redis/redis/v8"
@@ -108,6 +109,9 @@ func setDefaultValuesOnStartup(clients client.SliceOfClients) error{
 }
 
 func main() {
+	// Disable cert verification to use self-signed certificates for internal service needs.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
 	// Global logging synchronizer.
 	// This ensures the logged data is flushed out of the buffer before program exits.
 	defer zap.S().Sync()
@@ -141,5 +145,9 @@ func main() {
 	http.Handle("/metrics", handler)
 
 	zap.S().Infof("Starting the server on port %s", cfg.ExporterPort)
-	zap.S().Fatal(http.ListenAndServe(cfg.ExporterPort, nil))
+	zap.S().Fatal(http.ListenAndServeTLS(
+		cfg.ExporterPort,
+		"./exporter/crt.crt",
+		"./exporter/key.key",
+		nil))
 }

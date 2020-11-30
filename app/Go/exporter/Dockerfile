@@ -35,6 +35,8 @@ RUN mkdir -p /app/exporter/cmd/config
 # Copy the Pre-built binary file from the previous stage and the configuration file.
 COPY --from=builder /app/main .
 COPY --from=builder /app/exporter/cmd/config/configuration.yaml /app/exporter/cmd/config
+COPY --from=builder /app/exporter/crt.crt /app/exporter
+COPY --from=builder /app/exporter/key.key /app/exporter
 
 # Expose port 9999 to the outside world.
 EXPOSE 9999
