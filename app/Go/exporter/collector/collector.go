@@ -36,27 +36,27 @@ var (
 )
 
 type MetricsCollector struct {
-	ctx context.Context
-	clients client.SliceOfClients
-	requiredMetrics []string
-	databases []int
+	ctx                   context.Context
+	clients               client.SliceOfClients
+	requiredMetrics       []string
+	databases             []int
 	clientsConnectedTotal *prometheus.Desc
-	keysPerDatabaseCount *prometheus.Desc
-	expiringKeysCount *prometheus.Desc
-	averageKeyTTLSeconds *prometheus.Desc
+	keysPerDatabaseCount  *prometheus.Desc
+	expiringKeysCount     *prometheus.Desc
+	averageKeyTTLSeconds  *prometheus.Desc
 }
 
 // NewMetricsCollector allocates a new collector instance.
 func NewMetricsCollector(ctx context.Context, clients client.SliceOfClients, requiredMetrics []string, databases []int) *MetricsCollector {
 	return &MetricsCollector{
-		ctx: ctx,
-		clients: clients,
-		databases: databases,
-		requiredMetrics: requiredMetrics,
+		ctx:                   ctx,
+		clients:               clients,
+		databases:             databases,
+		requiredMetrics:       requiredMetrics,
 		clientsConnectedTotal: clientsConnectedTotal,
-		keysPerDatabaseCount: keysPerDatabaseCount,
-		expiringKeysCount: expiringKeysCount,
-		averageKeyTTLSeconds: averageKeyTTLSeconds,
+		keysPerDatabaseCount:  keysPerDatabaseCount,
+		expiringKeysCount:     expiringKeysCount,
+		averageKeyTTLSeconds:  averageKeyTTLSeconds,
 	}
 }
 
@@ -72,12 +72,12 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	// Any of clients from same Redis connection works well to provide collector with general and keyspace data from INFO.
 	generalMetrics, err := parser.GetInfoMetrics(collector.ctx, collector.requiredMetrics, collector.clients.RedisClients[0])
-	if err != nil{
+	if err != nil {
 		zap.S().Panic(err)
 	}
 
 	keyspaceMetrics, err := parser.GetKeyspaceMetrics(collector.ctx, collector.clients.RedisClients[0])
-	if err != nil{
+	if err != nil {
 		zap.S().Panic(err)
 	}
 
@@ -89,7 +89,7 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	// Iterate over all metrics.
 	for k, v := range *generalMetrics {
 		val, err := strconv.ParseFloat(v, 64)
-		if err != nil{
+		if err != nil {
 			stringMetricsKeys = append(stringMetricsKeys, k)
 			stringMetricsValues = append(stringMetricsValues, v)
 			continue
@@ -118,7 +118,7 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(collector.clientsConnectedTotal, prometheus.GaugeValue, getClientsConnectedTotal(*generalMetrics))
 
 	// Return required metrics for all configured databases.
-	for i, v := range *keyspaceMetrics{
+	for i, v := range *keyspaceMetrics {
 		db := strconv.Itoa(collector.databases[i])
 		ch <- prometheus.MustNewConstMetric(collector.keysPerDatabaseCount, prometheus.GaugeValue, getKeysPerDatabaseCount(v), db)
 		ch <- prometheus.MustNewConstMetric(collector.expiringKeysCount, prometheus.GaugeValue, getExpiringKeysCount(v), db)
@@ -126,40 +126,40 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func getClientsConnectedTotal(metrics map[string]string) float64{
+func getClientsConnectedTotal(metrics map[string]string) float64 {
 	metric := "connected_clients"
 	val, err := strconv.ParseFloat(metrics[metric], 64)
-	if err != nil{
+	if err != nil {
 		zap.S().Panic("Failed to read metric:", metric, err)
 	}
 
 	return val
 }
 
-func getKeysPerDatabaseCount(metrics map[string]string) float64{
+func getKeysPerDatabaseCount(metrics map[string]string) float64 {
 	metric := "keys"
 	val, err := strconv.ParseFloat(metrics[metric], 64)
-	if err != nil{
+	if err != nil {
 		zap.S().Panic("Failed to read metric:", metric, err)
 	}
 
 	return val
 }
 
-func getExpiringKeysCount(metrics map[string]string) float64{
+func getExpiringKeysCount(metrics map[string]string) float64 {
 	metric := "expires"
 	val, err := strconv.ParseFloat(metrics[metric], 64)
-	if err != nil{
+	if err != nil {
 		zap.S().Panic("Failed to read metric:", metric, err)
 	}
 
 	return val
 }
 
-func getAverageKeyTTLSeconds(metrics map[string]string) float64{
+func getAverageKeyTTLSeconds(metrics map[string]string) float64 {
 	metric := "avg_ttl"
 	val, err := strconv.ParseFloat(metrics[metric], 64)
-	if err != nil{
+	if err != nil {
 		zap.S().Panic("Failed to read metric:", metric, err)
 	}
 

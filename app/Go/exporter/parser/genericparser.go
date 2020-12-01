@@ -8,13 +8,13 @@ import (
 
 var skippedMetricSection = "Keyspace"
 
-func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client client.RedisClient) (*map[string]string, error){
+func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client client.RedisClient) (*map[string]string, error) {
 	metrics := make(map[string]string)
 
 	// Iterate over passed sections.
-	for _, section := range requiredMetrics{
+	for _, section := range requiredMetrics {
 		// Skip "Keyspace" metric as it's format differs from other INFO sections.
-		if strings.Compare(skippedMetricSection, section) == 0{
+		if strings.Compare(skippedMetricSection, section) == 0 {
 			continue
 		}
 
@@ -31,10 +31,10 @@ func GetInfoMetrics(ctx context.Context, requiredMetrics []string, client client
 		slicedData = slicedData[:len(slicedData)-1]
 
 		// Add key-value entry to the metrics map.
-		for _, dataRow := range slicedData{
+		for _, dataRow := range slicedData {
 			// Split string by ":" delimiter to separate the string into key and value.
 			parts := strings.Split(dataRow, ":")
-			metrics[parts[0]]=parts[1]
+			metrics[parts[0]] = parts[1]
 		}
 	}
 

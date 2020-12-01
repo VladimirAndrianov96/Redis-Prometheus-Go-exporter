@@ -7,26 +7,26 @@ import (
 	"exporter/exporter/collector"
 	"github.com/go-redis/redis/v8"
 	"github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"net/http/httptest"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 // Test exporter with 3 databases configured.
 // Exporter fetches as many databases as configured.
 var _ = Describe("Redis collector Prometheus exporter", func() {
-	var(
-		mockCtrl *gomock.Controller
-		ctx context.Context
-		mockClients client.SliceOfClients
+	var (
+		mockCtrl         *gomock.Controller
+		ctx              context.Context
+		mockClients      client.SliceOfClients
 		metricsCollector *collector.MetricsCollector
-		mockClient1 *mocks.MockRedisClient
-		mockClient2 *mocks.MockRedisClient
-		mockClient3 *mocks.MockRedisClient
-		handler http.Handler
+		mockClient1      *mocks.MockRedisClient
+		mockClient2      *mocks.MockRedisClient
+		mockClient3      *mocks.MockRedisClient
+		handler          http.Handler
 	)
 
 	Describe("Requesting Redis metrics", func() {
@@ -44,7 +44,7 @@ var _ = Describe("Redis collector Prometheus exporter", func() {
 			mockClients.RedisClients = append(mockClients.RedisClients, mockClient3)
 
 			// Set up collector to use mocked Redis clients.
-			metricsCollector = collector.NewMetricsCollector(ctx, mockClients, []string{"Keyspace", "Clients", "Memory"}, []int{1,2,3})
+			metricsCollector = collector.NewMetricsCollector(ctx, mockClients, []string{"Keyspace", "Clients", "Memory"}, []int{1, 2, 3})
 
 			// Get rid of any additional metrics, it should expose only required metrics with a custom registry
 			r := prometheus.NewRegistry()
@@ -53,11 +53,11 @@ var _ = Describe("Redis collector Prometheus exporter", func() {
 		})
 
 		When("Metrics were fetched from Redis", func() {
-			BeforeEach(func(){
+			BeforeEach(func() {
 				// Set up responses to be returned from mocked Redis client.
 				clientsResponse := redis.NewStringResult("# Clients\nconnected_clients:3\nclient_longest_output_list:0\nclient_biggest_input_buf:0\nblocked_clients:0\n", nil)
 				keyspaceResponse := redis.NewStringResult("# Keyspace\ndb1:keys=2,expires=0,avg_ttl=0\ndb2:keys=1,expires=0,avg_ttl=0\ndb3:keys=1,expires=0,avg_ttl=0\n", nil)
-				memoryResponse := redis.NewStringResult("# Memory\nused_memory:862632\nused_memory_human:842.41K\nused_memory_rss:7655424\nused_memory_rss_human:7.30M\nused_memory_peak:945504\nused_memory_peak_human:923.34K\ntotal_system_memory:13347020800\ntotal_system_memory_human:12.43G\nused_memory_lua:37888\nused_memory_lua_human:37.00K\nmaxmemory:0\nmaxmemory_human:0B\nmaxmemory_policy:noeviction\nmem_fragmentation_ratio:8.87\nmem_allocator:jemalloc-4.0.3\n",nil)
+				memoryResponse := redis.NewStringResult("# Memory\nused_memory:862632\nused_memory_human:842.41K\nused_memory_rss:7655424\nused_memory_rss_human:7.30M\nused_memory_peak:945504\nused_memory_peak_human:923.34K\ntotal_system_memory:13347020800\ntotal_system_memory_human:12.43G\nused_memory_lua:37888\nused_memory_lua_human:37.00K\nmaxmemory:0\nmaxmemory_human:0B\nmaxmemory_policy:noeviction\nmem_fragmentation_ratio:8.87\nmem_allocator:jemalloc-4.0.3\n", nil)
 
 				mockClient1.EXPECT().Info(ctx, "Clients").Return(clientsResponse)
 				mockClient1.EXPECT().Info(ctx, "Keyspace").Return(keyspaceResponse)
@@ -78,8 +78,8 @@ var _ = Describe("Redis collector Prometheus exporter", func() {
 	})
 })
 
-func getExpectedData() string{
-	return`# HELP redis_average_key_ttl_seconds Average key TTL in seconds.
+func getExpectedData() string {
+	return `# HELP redis_average_key_ttl_seconds Average key TTL in seconds.
 # TYPE redis_average_key_ttl_seconds gauge
 redis_average_key_ttl_seconds{database="1"} 0
 redis_average_key_ttl_seconds{database="2"} 0

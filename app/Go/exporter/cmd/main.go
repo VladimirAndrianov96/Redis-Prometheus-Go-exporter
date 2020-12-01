@@ -12,14 +12,15 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
+	"strconv"
 )
 
 // config declares connection and parser details.
 type config struct {
-	ExporterPort  string `mapstructure:"exporter_port"`
+	ExporterPort string `mapstructure:"exporter_port"`
 
-	RedisAddress     string `mapstructure:"redis_address"`
-	RedisPassword 	 string `mapstructure:"redis_password"`
+	RedisAddress  string `mapstructure:"redis_address"`
+	RedisPassword string `mapstructure:"redis_password"`
 
 	RedisDatabases []int `mapstructure:"redis_databases"`
 
@@ -38,7 +39,7 @@ func initLogger() error {
 
 	// Initialize the logger.
 	logger, err := zap.Config{
-		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
 		Encoding:         "console",
 		EncoderConfig:    encoder,
 		OutputPaths:      []string{"stderr"},
@@ -72,10 +73,10 @@ func loadConfiguration() error {
 	return nil
 }
 
-func setupRedisClients() (client.SliceOfClients){
+func setupRedisClients() client.SliceOfClients {
 	clients := client.SliceOfClients{}
 
-	for i, _ := range cfg.RedisDatabases{
+	for i, _ := range cfg.RedisDatabases {
 		client := redis.NewClient(&redis.Options{
 			Addr:     cfg.RedisAddress,
 			Password: cfg.RedisPassword,
@@ -90,15 +91,15 @@ func setupRedisClients() (client.SliceOfClients){
 
 // Writes data to all configured Redis databases on startup to make Redis create them.
 // If there are 5 databases configured, then create 5 and get all metrics.
-func setDefaultValuesOnStartup(clients client.SliceOfClients) error{
+func setDefaultValuesOnStartup(clients client.SliceOfClients) error {
 	// Add more data to two first database to make difference in metrics noticeable.
 	err := clients.RedisClients[0].Set(ctx, "test", "test", 0).Err()
 	if err != nil {
 		return err
 	}
 
-	for i, v := range clients.RedisClients{
-		index := string(i)
+	for i, v := range clients.RedisClients {
+		index := strconv.Itoa(i)
 		err := v.Set(ctx, "key"+index, "value"+index, 0).Err()
 		if err != nil {
 			return err
@@ -138,7 +139,7 @@ func main() {
 	// Create a new instance of the collector and register it with the prometheus client.
 	collector := collector.NewMetricsCollector(ctx, clients, cfg.RequiredMetrics, cfg.RedisDatabases)
 
-	// Get rid of any additional metrics, it should expose only required metrics with a custom registry
+	// Get rid of any additional metrics, it should expose only required metrics with a custom registry.
 	r := prometheus.NewRegistry()
 	r.MustRegister(collector)
 	handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})

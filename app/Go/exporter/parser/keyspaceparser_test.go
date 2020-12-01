@@ -12,9 +12,9 @@ import (
 )
 
 var _ = Describe("Keyspace INFO parser", func() {
-	var(
-		mockCtrl *gomock.Controller
-		ctx context.Context
+	var (
+		mockCtrl   *gomock.Controller
+		ctx        context.Context
 		mockClient *mocks.MockRedisClient
 	)
 
@@ -26,7 +26,7 @@ var _ = Describe("Keyspace INFO parser", func() {
 		})
 
 		When("Metrics were fetched from Redis", func() {
-			BeforeEach(func(){
+			BeforeEach(func() {
 				// Set up responses to be returned from mocked Redis client.
 				keyspaceResponse := redis.NewStringResult("# Keyspace\ndb1:keys=2,expires=0,avg_ttl=0\ndb2:keys=1,expires=0,avg_ttl=0\ndb3:keys=1,expires=0,avg_ttl=0\n", nil)
 
@@ -42,25 +42,25 @@ var _ = Describe("Keyspace INFO parser", func() {
 	})
 })
 
-func getKeyspaceExpectedData() *[]map[string]string{
+func getKeyspaceExpectedData() *[]map[string]string {
 	metricsForAllDB := []map[string]string{}
 
 	metrics := make(map[string]string)
-	metrics["avg_ttl"]="0"
-	metrics["expires"]="0"
-	metrics["keys"]="2"
+	metrics["avg_ttl"] = "0"
+	metrics["expires"] = "0"
+	metrics["keys"] = "2"
 	metricsForAllDB = append(metricsForAllDB, metrics)
 
 	metrics = make(map[string]string)
-	metrics["avg_ttl"]="0"
-	metrics["expires"]="0"
-	metrics["keys"]="1"
+	metrics["avg_ttl"] = "0"
+	metrics["expires"] = "0"
+	metrics["keys"] = "1"
 	metricsForAllDB = append(metricsForAllDB, metrics)
 
 	metrics = make(map[string]string)
-	metrics["avg_ttl"]="0"
-	metrics["expires"]="0"
-	metrics["keys"]="1"
+	metrics["avg_ttl"] = "0"
+	metrics["expires"] = "0"
+	metrics["keys"] = "1"
 	metricsForAllDB = append(metricsForAllDB, metrics)
 
 	return &metricsForAllDB
